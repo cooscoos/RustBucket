@@ -1,0 +1,7 @@
+CREATE TABLE compstats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  localdate TEXT NOT NULL,
+  cpu_temp INTEGER NOT NULL,
+  memuse FLOAT NOT NULL,
+  mem FLOAT NOT NULL
+)
