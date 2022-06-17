@@ -15,6 +15,8 @@ use rocket::request::FlashMessage;
 use rocket::response::{Flash, Redirect};
 use rocket::serde::Serialize;
 use rocket::fs::{FileServer, relative};
+use rocket::response::stream::{Event, EventStream};
+use rocket::tokio::time::{self, Duration};
 
 use rocket_dyn_templates::Template;
 
@@ -54,7 +56,6 @@ impl Context {
 
 #[post("/")]
 async fn new(conn: DbConn) -> Flash<Redirect> {
-    
 
     let time = readings::get_time_string();
     let cputemps = readings::read_temp().unwrap();
@@ -62,14 +63,13 @@ async fn new(conn: DbConn) -> Flash<Redirect> {
 
     let log = Log { localdate: time, cpu_temp: cputemps, memuse: memory.used, mem: memory.available };
 
-
-
     if let Err(e) = CompStat::insert(log, &conn).await {
         error_!("Database insertion error: {}", e);
-        Flash::error(Redirect::to("/"), "Logs could not be inserted due an internal error.")
+        return Flash::error(Redirect::to("/"), "Logs could not be inserted due an internal error.")
     } else {
-        Flash::success(Redirect::to("/"), "Log successfully added.")
-    }
+        return Flash::success(Redirect::to("/"), "Log successfully added.")
+    }        
+
 }
 
 
