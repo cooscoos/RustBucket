@@ -53,12 +53,13 @@ impl Context {
             Err(e) => {
                 error_!("DB Task::all() error: {}", e);
                 Context {
-                    flash: Some(("error".into(), "Fail to access database.".into())),
+                    flash: Some(("error".into(), "Failed to access database.".into())),
                     logged_stats: vec![],
                 }
             }
         }
     }
+
 }
 
 // Broadcast an empty message, this will break out of the logging loop in async fn start_logs
@@ -71,7 +72,7 @@ async fn stop_logs(queue: &State<Sender<()>>) -> Flash<Redirect> {
 #[post("/shutdown")]
 fn shutdown(shutdown: Shutdown) -> &'static str {
     shutdown.notify();
-    "Shut down. Process will need to be restarted on host."
+    "Shut down. Restart process on host to resume."
 }
 
 // Start logging host stats to sqlite
@@ -106,6 +107,7 @@ async fn start_logs(conn: DbConn, queue: &State<Sender<()>>, mut shutdown: Shutd
 #[post("/logs/show")]
 async fn show_logs(conn: DbConn) -> Flash<Redirect> {
     // todo: return db items
+    // At the moment flash redirect is showing the items in the db ...?
     return Flash::success(Redirect::to("/"), "Log successfully added.");
 }
 

@@ -1,5 +1,6 @@
 // Uses diesel to manage an sqlite database of system logs
 
+use diesel::connection;
 use diesel::{self, prelude::*, result::QueryResult};
 use rocket::serde::Serialize;
 
@@ -40,9 +41,25 @@ pub struct Log {
 }
 
 impl CompStat {
+
+    // Return the entire database
     pub async fn all(conn: &DbConn) -> QueryResult<Vec<CompStat>> {
         conn.run(|c| {
             all_compstats
+                .order(compstats::id.desc())
+                .load::<CompStat>(c)
+        })
+        .await
+    }
+
+    // Return the most recent N results from the database
+    // todo: how do I know how much to offset? any way to get most recent for offset?
+    pub async fn selection(conn: &DbConn, num_limit: i64) -> QueryResult<Vec<CompStat>> {
+        
+        conn.run(move |c| {
+            all_compstats 
+                .offset(1)
+                .limit(num_limit)
                 .order(compstats::id.desc())
                 .load::<CompStat>(c)
         })
