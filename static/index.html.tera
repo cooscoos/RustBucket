@@ -19,7 +19,7 @@
 
     <div class="row">
       <h4>RustBucket</h4>
-      <form action="/todo" method="post">
+      <form action="/logs/start" method="post">
         <div class="two columns">
           <input type="submit" value="Start logging">
         </div>
@@ -37,34 +37,16 @@
     </div>
 
     <div class="row">
-      <form action="/todo" method="post">
+      <form action="/logs/delete" method="post">
         <div class="two columns">
           <input type="submit" name="_method" value="delete all" />
         </div>
       </form>
     </div>
 
-    <div class="row">
-      <h4>Rocket Todo</h4>
-      <form action="/message" method="post">
-    <div class="ten columns">
-          <input type="text" placeholder="enter a task description..."
-            name="description" id="description" value="" autofocus
-            class="u-full-width {% if flash %}field-{{flash.0}}{% endif %}" />
-          {% if flash %}
-            <small class="field-{{flash.0}}-msg">
-               {{ flash.1 }}
-            </small>
-          {% endif %}
-    </div>
-    <div class="two columns">
-          <input type="submit" value="add task">
-    </div>
-          </form>
-    </div>
 
     <div class="row">
-      <form action="/showlogs" method="post">
+      <form action="/logs/show" method="post">
         <div class="two columns">
           <input type="submit" name="_method" value="Show logs" />
         </div>
@@ -72,7 +54,7 @@
     </div>
 
         <div class="row">
-      <form action="/message" method="post">
+      <form action="/logs/stop" method="post">
         <div class="two columns">
           <input type="submit" name="_method" value="stop" />
         </div>
@@ -92,7 +74,7 @@
     <div class="row">
       <div class="twelve columns">
         <ul>
-        {% for task in tasks %}
+        {% for task in logged_stats %}
             <li>
                 {{ task.localdate }}, {{task.cpu_temp}}, {{task.memuse}} / {{task.mem}}
               </form>

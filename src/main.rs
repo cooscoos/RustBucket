@@ -1,92 +1,31 @@
-#[macro_use] extern crate rocket;
-#[macro_use] extern crate diesel;
-#[macro_use] extern crate diesel_migrations;
-#[macro_use] extern crate rocket_sync_db_pools;
+// External crates
+#[macro_use]
+extern crate rocket;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
+#[macro_use]
+extern crate rocket_sync_db_pools;
 
-
-mod stats;
-mod linux_logs;
-use std::thread;
-
-use linux_logs::readings;
-
-use rocket::http::hyper::server::Server;
-use rocket::{Rocket, Build};
 use rocket::fairing::AdHoc;
+use rocket::fs::{relative, FileServer};
 use rocket::request::FlashMessage;
 use rocket::response::{Flash, Redirect};
 use rocket::serde::Serialize;
-use rocket::fs::{FileServer, relative};
-
-use rocket::response::stream::{Event, EventStream};
-use rocket::tokio::time::{self, Duration};
-
-use rocket::futures::stream::Stream;
-use rocket::response::stream::stream;
-use rocket::futures::stream::{self, StreamExt};
-use rocket::Shutdown;
 use rocket::tokio::select;
+use rocket::tokio::sync::broadcast::{channel, Sender};
+use rocket::tokio::time::{self, Duration};
+use rocket::{Build, Rocket, Shutdown, State};
 use rocket_dyn_templates::Template;
-use rocket::State;
-use rocket::form::Form;
-use rocket::tokio::sync::broadcast::{channel, Sender, error::RecvError};
 
-//use futures::channel::oneshot;
-
-
-
-
-
-use tokio::sync::mpsc;
-
-/// Receive a message from a form submission and broadcast it to any receivers.
-#[post("/message", data = "<form>")]
-async fn post(form: Form<String>, queue: &State<Sender<String>> ) {
-    let _res = queue.send("Sent a message 2 u".to_string());
-}
-
-#[post("/todo")]
-async fn make_stream(conn: DbConn, queue: &State<Sender<String>>, mut shutdown: Shutdown) {
-
-
-    let mut rx = queue.subscribe();
-    // it's because this is a queue...
-    let mut interval = time::interval(Duration::from_secs(1));
-    loop {
-        select! {
-            _ = interval.tick() => {
-                println!("yes");
-
-                let time = readings::get_time_string();
-                let cputemps = readings::read_temp().unwrap();
-                let memory = readings::read_memory().unwrap();
-            
-                let log = Log { localdate: time, cpu_temp: cputemps, memuse: memory.used, mem: memory.available };
-            
-                if let Err(e) = CompStat::insert(log, &conn).await {
-                    error_!("Database insertion error: {}", e);
-                    //return Flash::error(Redirect::to("/"), "Logs could not be inserted due an internal error.")
-                }
-            },
-            msg = rx.recv() => match msg {
-                Ok(_) => break,
-                Err(_)=> {info!("Error. Hit shutdown to stop.");continue;},
-            },
-            _ = &mut shutdown => break,
-        }
-    }
-}
-
-
-
-#[post("/shutdown")]
-fn shutdown(shutdown: Shutdown) -> &'static str {
-    shutdown.notify();
-    "Shutting down..."
-}
-
+// Internal modules
+mod linux_logs;
+mod stats;
 use crate::stats::{CompStat, Log};
+use linux_logs::readings;
 
+// Set up sqlite database
 #[database("sqlite_database")]
 pub struct DbConn(diesel::SqliteConnection);
 
@@ -94,61 +33,100 @@ pub struct DbConn(diesel::SqliteConnection);
 #[serde(crate = "rocket::serde")]
 struct Context {
     flash: Option<(String, String)>,
-    tasks: Vec<CompStat>
+    logged_stats: Vec<CompStat>,
 }
 
 impl Context {
     pub async fn err<M: std::fmt::Display>(conn: &DbConn, msg: M) -> Context {
         Context {
             flash: Some(("error".into(), msg.to_string())),
-            tasks: CompStat::all(conn).await.unwrap_or_default()
+            logged_stats: CompStat::all(conn).await.unwrap_or_default(),
         }
     }
 
     pub async fn raw(conn: &DbConn, flash: Option<(String, String)>) -> Context {
         match CompStat::all(conn).await {
-            Ok(tasks) => Context { flash, tasks },
+            Ok(stats) => Context {
+                flash,
+                logged_stats: stats,
+            },
             Err(e) => {
                 error_!("DB Task::all() error: {}", e);
                 Context {
                     flash: Some(("error".into(), "Fail to access database.".into())),
-                    tasks: vec![]
+                    logged_stats: vec![],
                 }
             }
         }
     }
 }
 
-#[post("/showlogs")]
-async fn new(conn: DbConn) -> Flash<Redirect> {
-
-    //return db items
-    return Flash::success(Redirect::to("/"), "Log successfully added.")
-
-
+// Broadcast an empty message, this will break out of the logging loop in async fn start_logs
+#[post("/logs/stop")]
+async fn stop_logs(queue: &State<Sender<()>>) -> Flash<Redirect> {
+    let _res = queue.send(());
+    Flash::success(Redirect::to("/"), "Logs successfully stopped.")
 }
 
+#[post("/shutdown")]
+fn shutdown(shutdown: Shutdown) -> &'static str {
+    shutdown.notify();
+    "Shut down. Process will need to be restarted on host."
+}
 
+// Start logging host stats to sqlite
+#[post("/logs/start")]
+async fn start_logs(conn: DbConn, queue: &State<Sender<()>>, mut shutdown: Shutdown) {
+    let mut rx = queue.subscribe();
+    let mut interval = time::interval(Duration::from_secs(1));
+    loop {
+        select! {                               // Select whichever happens first
+            _ = interval.tick() => {            // The next second happens,
+                println!("Log acquired.");
 
-#[delete("/")]
-async fn delete(conn: DbConn) -> Flash<Redirect> {
+                let time = readings::get_time_string();
+                let cputemps = readings::read_temp().unwrap();
+                let memory = readings::read_memory().unwrap();
+
+                let log = Log { localdate: time, cpu_temp: cputemps, memuse: memory.used, mem: memory.available };
+
+                if let Err(e) = CompStat::insert(log, &conn).await {
+                    error_!("Database insertion error: {}", e);
+                }
+            },
+            msg = rx.recv() => match msg {      // queue recieves a message (set by async fn stop_logs)
+                Ok(_) => break,
+                Err(_)=> {info!("Error. Hit shutdown to stop.");continue;},
+            },
+            _ = &mut shutdown => break,         // receive notification to shutdown
+        }
+    }
+}
+
+#[post("/logs/show")]
+async fn show_logs(conn: DbConn) -> Flash<Redirect> {
+    // todo: return db items
+    return Flash::success(Redirect::to("/"), "Log successfully added.");
+}
+
+#[delete("/logs/delete")]
+async fn delete_logs(conn: DbConn) -> Flash<Redirect> {
     if let Err(e) = CompStat::delete_all(&conn).await {
         error_!("Database deletion error: {}", e);
-        Flash::error(Redirect::to("/"), "Logs could not be inserted due an internal error.")
+        Flash::error(
+            Redirect::to("/"),
+            "Logs could not be inserted due an internal error.",
+        )
     } else {
         Flash::success(Redirect::to("/"), "Logs successfully deleted.")
     }
 }
 
-
-
 #[get("/")]
 async fn index(flash: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
-
     let flash = flash.map(FlashMessage::into_inner);
     Template::render("index", Context::raw(&conn, flash).await)
-
- }
+}
 
 async fn run_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
     // This macro from `diesel_migrations` defines an `embedded_migrations`
@@ -157,7 +135,9 @@ async fn run_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
     embed_migrations!();
 
     let conn = DbConn::get_one(&rocket).await.expect("database connection");
-    conn.run(|c| embedded_migrations::run(c)).await.expect("can run migrations");
+    conn.run(|c| embedded_migrations::run(c))
+        .await
+        .expect("can't run migrations");
 
     rocket
 }
@@ -168,9 +148,17 @@ fn rocket() -> Rocket<Build> {
         .attach(DbConn::fairing())
         .attach(Template::fairing())
         .attach(AdHoc::on_ignite("Run Migrations", run_migrations))
-        .manage(channel::<String>(1024).0)
+        .manage(channel::<()>(1).0)
         .mount("/", FileServer::from(relative!("static")))
-        .mount("/", routes![index, shutdown,post,make_stream ])
-        .mount("/todo", routes![new, delete])
-
+        .mount(
+            "/",
+            routes![
+                index,
+                shutdown,
+                stop_logs,
+                start_logs,
+                show_logs,
+                delete_logs
+            ],
+        )
 }

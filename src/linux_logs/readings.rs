@@ -1,8 +1,8 @@
+use chrono::{self, Datelike, Timelike};
+use regex::Regex;
 use std::error;
 use std::fs::File;
 use std::io::{self, Read};
-use chrono::{self, Datelike, Timelike};
-use regex::Regex;
 
 use super::memory::Memory; // super is the parent
 
@@ -40,7 +40,6 @@ fn read_file(file: &str) -> Result<String, io::Error> {
 
     Ok(buffer)
 }
-
 
 pub fn get_time_string() -> String {
     let dt = chrono::offset::Local::now();
