@@ -64,9 +64,9 @@
     </div>
 
     <div class="row">
-      <form action="/message" method="post">
+      <form action="/showlogs" method="post">
         <div class="two columns">
-          <input type="text" name="_method" value="ok" />
+          <input type="submit" name="_method" value="Show logs" />
         </div>
       </form>
     </div>

@@ -6,8 +6,11 @@
 
 mod stats;
 mod linux_logs;
+use std::thread;
+
 use linux_logs::readings;
 
+use rocket::http::hyper::server::Server;
 use rocket::{Rocket, Build};
 use rocket::fairing::AdHoc;
 use rocket::request::FlashMessage;
@@ -28,34 +31,49 @@ use rocket::State;
 use rocket::form::Form;
 use rocket::tokio::sync::broadcast::{channel, Sender, error::RecvError};
 
+//use futures::channel::oneshot;
+
+
+
+
+
+use tokio::sync::mpsc;
 
 /// Receive a message from a form submission and broadcast it to any receivers.
 #[post("/message", data = "<form>")]
-async fn post(form: Form<String>, queue: &State<Sender<String>>) {
-    // A send 'fails' if there are no active subscribers. That's okay.
-    let mut interval = time::interval(Duration::from_secs(1));
-    loop {
-        let _res = queue.send(form.to_string());
-        interval.tick().await;
-    }
+async fn post(form: Form<String>, queue: &State<Sender<String>> ) {
+    let _res = queue.send("Sent a message 2 u".to_string());
 }
 
+#[post("/todo")]
+async fn make_stream(conn: DbConn, queue: &State<Sender<String>>, mut shutdown: Shutdown) {
 
-#[get("/events")]
-async fn make_stream(queue: &State<Sender<String>>, mut shutdown: Shutdown) -> EventStream![]  {
+
     let mut rx = queue.subscribe();
-    EventStream! {
-        loop {
-            select! {
-                msg = rx.recv() => match msg {
-                    Ok(msg) => {println!("{msg}"); if msg == "ok".to_string() {println!("yes"); yield Event::data("ping")}},
-                    _ => break,
-                },
-                _ = &mut shutdown => break,
-            }
+    // it's because this is a queue...
+    let mut interval = time::interval(Duration::from_secs(1));
+    loop {
+        select! {
+            _ = interval.tick() => {
+                println!("yes");
+
+                let time = readings::get_time_string();
+                let cputemps = readings::read_temp().unwrap();
+                let memory = readings::read_memory().unwrap();
+            
+                let log = Log { localdate: time, cpu_temp: cputemps, memuse: memory.used, mem: memory.available };
+            
+                if let Err(e) = CompStat::insert(log, &conn).await {
+                    error_!("Database insertion error: {}", e);
+                    //return Flash::error(Redirect::to("/"), "Logs could not be inserted due an internal error.")
+                }
+            },
+            msg = rx.recv() => match msg {
+                Ok(_) => break,
+                Err(_)=> {info!("Error. Hit shutdown to stop.");continue;},
+            },
+            _ = &mut shutdown => break,
         }
-
-
     }
 }
 
@@ -101,21 +119,12 @@ impl Context {
     }
 }
 
-#[post("/")]
+#[post("/showlogs")]
 async fn new(conn: DbConn) -> Flash<Redirect> {
 
-    let time = readings::get_time_string();
-    let cputemps = readings::read_temp().unwrap();
-    let memory = readings::read_memory().unwrap();
+    //return db items
+    return Flash::success(Redirect::to("/"), "Log successfully added.")
 
-    let log = Log { localdate: time, cpu_temp: cputemps, memuse: memory.used, mem: memory.available };
-
-    if let Err(e) = CompStat::insert(log, &conn).await {
-        error_!("Database insertion error: {}", e);
-        return Flash::error(Redirect::to("/"), "Logs could not be inserted due an internal error.")
-    } else {
-        return Flash::success(Redirect::to("/"), "Log successfully added.")
-    }        
 
 }
 
@@ -161,7 +170,7 @@ fn rocket() -> Rocket<Build> {
         .attach(AdHoc::on_ignite("Run Migrations", run_migrations))
         .manage(channel::<String>(1024).0)
         .mount("/", FileServer::from(relative!("static")))
-        .mount("/", routes![index, make_stream, shutdown,post ])
+        .mount("/", routes![index, shutdown,post,make_stream ])
         .mount("/todo", routes![new, delete])
 
 }
