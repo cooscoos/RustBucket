@@ -19,88 +19,70 @@
 
     <div class="row">
       <h4>RustBucket</h4>
-      <form action="/logs/start" method="post">
-        <div class="two columns">
-          <input type="submit" value="Start logging">
-        </div>
-      </form>
+      <div class="twelve columns">
+        {% if flash %}
+            <small class="field-{{flash.0}}-msg">
+              {{ flash.1 }}
+            </small>
+          {% endif %}
+      </div>
     </div>
-
-
-
-    <div class="ten columns">
-      {% if flash %}
-          <small class="field-{{flash.0}}-msg">
-            {{ flash.1 }}
-          </small>
-        {% endif %}
-    </div>
-
+  
     <div class="row">
-      <form action="/logs/delete" method="post">
-        <div class="two columns">
+      <div class="two columns">
+        <form action="/logs/start" method="post">
+          <input class="button-primary" type="submit" value="Start logs">
+        </form>
+      </div>
+      <div class="four columns">
+        <form action="/logs/stop" method="post">
+          <input class="button-primary" type="submit" name="_method" value="stop logs" />
+        </form>
+      </div>  
+
+      <div class="four columns">
+        <form action="/logs/delete" method="post">
           <input type="submit" name="_method" value="delete all" />
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
 
-
-    <div class="row">
-      <form action="/logs/show" method="post">
-        <div class="two columns">
-          <input type="submit" name="_method" value="Show logs" />
-        </div>
-      </form>
-    </div>
-
-        <div class="row">
-      <form action="/logs/stop" method="post">
-        <div class="two columns">
-          <input type="submit" name="_method" value="stop" />
-        </div>
-      </form>
-    </div>
-
-    <div class="row">
-      <form action="/shutdown" method="post">
-        <div class="two columns">
+      <div class="two columns">
+        <form action="/shutdown" method="post">
           <input type="submit" name="_method" value="shutdown" />
+        </form>
         </div>
-      </form>
     </div>
 
+    <div class="row">
+          <div class="two columns">
+        <form action="/logs/show" method="post">
+          <input type="submit" name="_method" value="Show logs" />
+        </form>
+      </div> 
 
- <table>
-  <tr>
-    <th>Date</th>
-    <th>Time</th>
-    <th>CPU Temp </th>
-    <th> Memory (used/available)</th>
-  </tr>
+    </div>
 
-  <tr>
-    <th>yyyy-mm-dd</th>
-    <th>hh:mm:ss</th>
-    <th>(&#176;C)</th>
-    <th> GB / GB</th>
-  </tr>
+    <table class="u-full-width">
+      <thead>
+        <tr>
+          <th> <p>Date</p> <p>yyyy-mm-dd</p></th>
+          <th> <p>Time</p> <p>hh:mm:ss</p></th>
+          <th> <p>CPU Temp</p><p>&#176;C</p></th>
+          <th> <p>Memory</p><p>used / available GB</p></th>
+        </tr>
+      </thead>
 
-
-  {% for task in logged_stats %}
-            <tr>
-               <td> {{ task.localdate }} </td>
-                <td> {{ task.localtime }} </td>
-               <td> {{task.cpu_temp}} </td>
-               <td> {{task.memuse}} / {{task.mem}} </td>
-            </tr>
-        {% endfor %}
-
-
-</table> 
-
-
-
-
+      <tbody> 
+        {% for task in logged_stats %}
+                  <tr>
+                    <td> {{ task.localdate }} </td>
+                      <td> {{ task.localtime }} </td>
+                    <td> {{task.cpu_temp}} </td>
+                    <td> {{task.memuse}} / {{task.mem}} </td>
+                  </tr>
+              {% endfor %}
+      </tbody>
+    </table> 
 
   </div>
 </body>
