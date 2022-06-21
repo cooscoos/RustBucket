@@ -29,6 +29,7 @@ use linux_logs::readings;
 #[database("sqlite_database")]
 pub struct DbConn(diesel::SqliteConnection);
 
+// Context is for displaying things on webpages
 #[derive(Debug, Serialize)]
 #[serde(crate = "rocket::serde")]
 struct Context {
@@ -37,7 +38,8 @@ struct Context {
 }
 
 impl Context {
-    pub async fn err<M: std::fmt::Display>(conn: &DbConn, msg: M) -> Context {
+    // Error method currently unused but might be useful later
+    pub async fn _err<M: std::fmt::Display>(conn: &DbConn, msg: M) -> Context {
         Context {
             flash: Some(("error".into(), msg.to_string())),
             logged_stats: {
@@ -45,18 +47,19 @@ impl Context {
                 // convert compstat from the db into htmlcompstat for the webpage
                 compstat_vec
                     .iter()
-                    .map(|c| HtmlCompStat::default(c))
+                    .map(HtmlCompStat::default)
                     .collect()
             },
         }
     }
 
-    pub async fn raw(conn: &DbConn, flash: Option<(String, String)>) -> Context {
-        match CompStat::all(conn).await {
+    // Update the webpage Context
+    pub async fn raw(conn: &DbConn, flash: Option<(String, String)>, num_limit: i64) -> Context {
+        match CompStat::selection(conn, num_limit).await {
             Ok(stats) => Context {
                 flash,
                 // convert compstat from the db (floats) into htmlcompstat (formatted strings) for the webpage
-                logged_stats: stats.iter().map(|c| HtmlCompStat::default(c)).collect(),
+                logged_stats: stats.iter().map(HtmlCompStat::default).collect(),
             },
             Err(e) => {
                 error_!("DB Task::all() error: {}", e);
@@ -79,10 +82,10 @@ async fn stop_logs(queue: &State<Sender<()>>) -> Flash<Redirect> {
 #[post("/shutdown")]
 fn shutdown(shutdown: Shutdown) -> &'static str {
     shutdown.notify();
-    "Shut down. Restart process on host to resume."
+    "Shut down. Restart RustBucket on host to resume."
 }
 
-// Start logging host stats to sqlite
+// Start logging host stats to sqlite db
 #[post("/logs/start")]
 async fn start_logs(conn: DbConn, queue: &State<Sender<()>>, mut shutdown: Shutdown) {
     let mut rx = queue.subscribe();
@@ -111,13 +114,23 @@ async fn start_logs(conn: DbConn, queue: &State<Sender<()>>, mut shutdown: Shutd
     }
 }
 
-#[post("/logs/show")]
-async fn show_logs(conn: DbConn) -> Flash<Redirect> {
-    // todo: return db items
-    // At the moment flash redirect is showing the items in the db ...?
-    return Flash::success(Redirect::to("/"), "Refreshed.");
+use rocket::form::Form;
+
+// This shows the num_limit logs
+#[post("/logs/show", data = "<form>")]
+async fn show_logs(form: Option<Form<i64>>, flash: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
+
+    // If the num_limit isn't defined then set it to -1, this will force program to show all logs in the db
+    let num_limit = match form {
+        Some(value) => value.into_inner(),
+        None => -1,
+    };
+    
+    let flash = flash.map(FlashMessage::into_inner);
+    Template::render("index", Context::raw(&conn, flash, num_limit).await)
 }
 
+// Delete all logs in db
 #[delete("/logs/delete")]
 async fn delete_logs(conn: DbConn) -> Flash<Redirect> {
     if let Err(e) = CompStat::delete_all(&conn).await {
@@ -134,7 +147,7 @@ async fn delete_logs(conn: DbConn) -> Flash<Redirect> {
 #[get("/")]
 async fn index(flash: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     let flash = flash.map(FlashMessage::into_inner);
-    Template::render("index", Context::raw(&conn, flash).await)
+    Template::render("index", Context::raw(&conn, flash, 5).await)
 }
 
 async fn run_migrations(rocket: Rocket<Build>) -> Rocket<Build> {

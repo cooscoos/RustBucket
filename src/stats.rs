@@ -49,17 +49,24 @@ impl CompStat {
         .await
     }
 
-    // Return the most recent N results from the database
-    // todo: how do I know how much to offset? any way to get most recent for offset?
+    // Return the most recent num_limit results from the database
     pub async fn selection(conn: &DbConn, num_limit: i64) -> QueryResult<Vec<CompStat>> {
-        conn.run(move |c| {
+
+        // Try get the most recent records
+        match conn.run(move |c| {
             all_compstats
-                .offset(1)
-                .limit(num_limit)
                 .order(compstats::id.desc())
+                .limit(num_limit)
                 .load::<CompStat>(c)
         })
-        .await
+        .await {
+            Ok(val) => Ok(val),
+            Err(_) => {
+                /// Errors occur because the user requested more logs than are available, or the request was numlimit=-1
+                // If that's the case then just return all logs in the db
+                CompStat::all(conn).await
+            }
+        }
     }
 
     /// Returns the number of affected rows: 1.

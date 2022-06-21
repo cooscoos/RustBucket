@@ -54,13 +54,33 @@
     </div>
 
     <div class="row">
-          <div class="two columns">
-        <form action="/logs/show" method="post">
-          <input type="submit" name="_method" value="Show logs" />
-        </form>
-      </div> 
+    <h6>Log display options, show:</h6>
+
+      <form action="/logs/show" method="post">
+        <div class="two columns">
+          <input type="submit" value="Most recent">
+        </div>
+        <div class="three columns">
+          <input type="number" 
+            name="numlogs" id="numlogs" value="10" min="1" />
+        </div>
+      </form>
+    </div>
+
+    <div class="row">
+    <div class="three columns">
+        <form action="/logs/show" method="post" >
+          <input type="submit" name="_method" value="all available logs" />
+        </form> 
+    </div>
+
+
 
     </div>
+
+
+
+
 
     <table class="u-full-width">
       <thead>
