@@ -16,6 +16,7 @@ impl Memory {
         }
     }
 
+    // Return kb memory as gb
     fn as_gb(kb_in: u32) -> f32 {
         (kb_in as f32) / (1024_f32.powf(2.0))
     }

@@ -93,3 +93,28 @@ impl CompStat {
         conn.run(|c| diesel::delete(all_compstats).execute(c)).await
     }
 }
+
+
+
+// Need to make an Html display version of compstat that outputs strings because I don't know enough html to format f32 precision
+#[derive(Serialize, Debug, Clone)]
+#[serde(crate = "rocket::serde")]
+pub struct HtmlCompStat {
+    pub localdate: String,
+    pub localtime: String,
+    pub cpu_temp: String,
+    pub memuse: String,
+    pub mem: String,
+}
+
+// Take the CompStat from the database and format the precision for the webpage
+impl HtmlCompStat {
+    pub fn default(raw_compstat: &CompStat) -> Self {
+        HtmlCompStat {
+        localdate: raw_compstat.localdate[0..10].to_string(),
+        localtime: raw_compstat.localdate[11..19].to_string(),
+        cpu_temp: format!("{}",raw_compstat.cpu_temp),
+        memuse: format!("{:.2}",raw_compstat.memuse),
+        mem: format!("{:.2}",raw_compstat.mem)}
+    }
+}

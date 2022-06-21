@@ -70,19 +70,38 @@
     </div>
 
 
+ <table>
+  <tr>
+    <th>Date</th>
+    <th>Time</th>
+    <th>CPU Temp </th>
+    <th> Memory (used/available)</th>
+  </tr>
 
-    <div class="row">
-      <div class="twelve columns">
-        <ul>
-        {% for task in logged_stats %}
-            <li>
-                {{ task.localdate }}, {{task.cpu_temp}}, {{task.memuse}} / {{task.mem}}
-              </form>
-            </li>
+  <tr>
+    <th>yyyy-mm-dd</th>
+    <th>hh:mm:ss</th>
+    <th>(&#176;C)</th>
+    <th> GB / GB</th>
+  </tr>
+
+
+  {% for task in logged_stats %}
+            <tr>
+               <td> {{ task.localdate }} </td>
+                <td> {{ task.localtime }} </td>
+               <td> {{task.cpu_temp}} </td>
+               <td> {{task.memuse}} / {{task.mem}} </td>
+            </tr>
         {% endfor %}
-        </ul>
-      </div>
-    </div>
+
+
+</table> 
+
+
+
+
+
   </div>
 </body>
 </html>

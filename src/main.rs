@@ -22,7 +22,7 @@ use rocket_dyn_templates::Template;
 // Internal modules
 mod linux_logs;
 mod stats;
-use crate::stats::{CompStat, Log};
+use crate::stats::{CompStat, Log, HtmlCompStat};
 use linux_logs::readings;
 
 // Set up sqlite database
@@ -33,14 +33,20 @@ pub struct DbConn(diesel::SqliteConnection);
 #[serde(crate = "rocket::serde")]
 struct Context {
     flash: Option<(String, String)>,
-    logged_stats: Vec<CompStat>,
+    logged_stats: Vec<HtmlCompStat>,
 }
+
+
 
 impl Context {
     pub async fn err<M: std::fmt::Display>(conn: &DbConn, msg: M) -> Context {
         Context {
             flash: Some(("error".into(), msg.to_string())),
-            logged_stats: CompStat::all(conn).await.unwrap_or_default(),
+            logged_stats: {
+                let compstat_vec = CompStat::all(conn).await.unwrap_or_default();
+                // convert compstat from the db into htmlcompstat for the webpage
+                compstat_vec.iter().map(|c| HtmlCompStat::default(c)).collect() 
+            },
         }
     }
 
@@ -48,7 +54,8 @@ impl Context {
         match CompStat::all(conn).await {
             Ok(stats) => Context {
                 flash,
-                logged_stats: stats,
+                // convert compstat from the db (floats) into htmlcompstat (formatted strings) for the webpage
+                logged_stats: stats.iter().map(|c| HtmlCompStat::default(c)).collect(),
             },
             Err(e) => {
                 error_!("DB Task::all() error: {}", e);
@@ -66,7 +73,7 @@ impl Context {
 #[post("/logs/stop")]
 async fn stop_logs(queue: &State<Sender<()>>) -> Flash<Redirect> {
     let _res = queue.send(());
-    Flash::success(Redirect::to("/"), "Logs successfully stopped.")
+    Flash::success(Redirect::to("/"), "Stopped logging.")
 }
 
 #[post("/shutdown")]
@@ -108,7 +115,7 @@ async fn start_logs(conn: DbConn, queue: &State<Sender<()>>, mut shutdown: Shutd
 async fn show_logs(conn: DbConn) -> Flash<Redirect> {
     // todo: return db items
     // At the moment flash redirect is showing the items in the db ...?
-    return Flash::success(Redirect::to("/"), "Log successfully added.");
+    return Flash::success(Redirect::to("/"), "Refreshed.");
 }
 
 #[delete("/logs/delete")]
@@ -120,7 +127,7 @@ async fn delete_logs(conn: DbConn) -> Flash<Redirect> {
             "Logs could not be inserted due an internal error.",
         )
     } else {
-        Flash::success(Redirect::to("/"), "Logs successfully deleted.")
+        Flash::success(Redirect::to("/"), "All logs deleted.")
     }
 }
 
