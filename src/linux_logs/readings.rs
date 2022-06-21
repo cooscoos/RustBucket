@@ -29,7 +29,13 @@ pub fn read_memory() -> Result<Memory, Box<dyn error::Error>> {
         memory_vals.push(*m);
     }
 
-    Ok(Memory::default(memory_vals[0], memory_vals[1], memory_vals[2], memory_vals[3], memory_vals[4]))
+    Ok(Memory::default(
+        memory_vals[0],
+        memory_vals[1],
+        memory_vals[2],
+        memory_vals[3],
+        memory_vals[4],
+    ))
 }
 
 fn read_file(file: &str) -> Result<String, io::Error> {

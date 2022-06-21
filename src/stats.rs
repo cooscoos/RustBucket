@@ -1,6 +1,4 @@
 // Uses diesel to manage an sqlite database of system logs
-
-use diesel::connection;
 use diesel::{self, prelude::*, result::QueryResult};
 use rocket::serde::Serialize;
 
@@ -41,7 +39,6 @@ pub struct Log {
 }
 
 impl CompStat {
-
     // Return the entire database
     pub async fn all(conn: &DbConn) -> QueryResult<Vec<CompStat>> {
         conn.run(|c| {
@@ -55,9 +52,8 @@ impl CompStat {
     // Return the most recent N results from the database
     // todo: how do I know how much to offset? any way to get most recent for offset?
     pub async fn selection(conn: &DbConn, num_limit: i64) -> QueryResult<Vec<CompStat>> {
-        
         conn.run(move |c| {
-            all_compstats 
+            all_compstats
                 .offset(1)
                 .limit(num_limit)
                 .order(compstats::id.desc())
@@ -94,9 +90,9 @@ impl CompStat {
     }
 }
 
-
-
-// Need to make an Html display version of compstat that outputs strings because I don't know enough html to format f32 precision
+/// Need to make an Html display version of compstat that outputs strings because
+/// I don't know enough html to format float precision of passed variables
+/// ¯\_ (ツ)_/¯
 #[derive(Serialize, Debug, Clone)]
 #[serde(crate = "rocket::serde")]
 pub struct HtmlCompStat {
@@ -111,10 +107,11 @@ pub struct HtmlCompStat {
 impl HtmlCompStat {
     pub fn default(raw_compstat: &CompStat) -> Self {
         HtmlCompStat {
-        localdate: raw_compstat.localdate[0..10].to_string(),
-        localtime: raw_compstat.localdate[11..19].to_string(),
-        cpu_temp: format!("{}",raw_compstat.cpu_temp),
-        memuse: format!("{:.2}",raw_compstat.memuse),
-        mem: format!("{:.2}",raw_compstat.mem)}
+            localdate: raw_compstat.localdate[0..10].to_string(),
+            localtime: raw_compstat.localdate[11..19].to_string(),
+            cpu_temp: format!("{}", raw_compstat.cpu_temp),
+            memuse: format!("{:.2}", raw_compstat.memuse),
+            mem: format!("{:.2}", raw_compstat.mem),
+        }
     }
 }

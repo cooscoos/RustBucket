@@ -22,7 +22,7 @@ use rocket_dyn_templates::Template;
 // Internal modules
 mod linux_logs;
 mod stats;
-use crate::stats::{CompStat, Log, HtmlCompStat};
+use crate::stats::{CompStat, HtmlCompStat, Log};
 use linux_logs::readings;
 
 // Set up sqlite database
@@ -36,8 +36,6 @@ struct Context {
     logged_stats: Vec<HtmlCompStat>,
 }
 
-
-
 impl Context {
     pub async fn err<M: std::fmt::Display>(conn: &DbConn, msg: M) -> Context {
         Context {
@@ -45,7 +43,10 @@ impl Context {
             logged_stats: {
                 let compstat_vec = CompStat::all(conn).await.unwrap_or_default();
                 // convert compstat from the db into htmlcompstat for the webpage
-                compstat_vec.iter().map(|c| HtmlCompStat::default(c)).collect() 
+                compstat_vec
+                    .iter()
+                    .map(|c| HtmlCompStat::default(c))
+                    .collect()
             },
         }
     }
@@ -66,7 +67,6 @@ impl Context {
             }
         }
     }
-
 }
 
 // Broadcast an empty message, this will break out of the logging loop in async fn start_logs
