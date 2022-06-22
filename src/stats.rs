@@ -62,7 +62,7 @@ impl CompStat {
         .await {
             Ok(val) => Ok(val),
             Err(_) => {
-                /// Errors occur because the user requested more logs than are available, or the request was numlimit=-1
+                // Errors occur because the user requested more logs than are available, or the request was numlimit=-1
                 // If that's the case then just return all logs in the db
                 CompStat::all(conn).await
             }

@@ -18,6 +18,7 @@ use rocket::tokio::sync::broadcast::{channel, Sender};
 use rocket::tokio::time::{self, Duration};
 use rocket::{Build, Rocket, Shutdown, State};
 use rocket_dyn_templates::Template;
+use rocket::form::Form;
 
 // Internal modules
 mod linux_logs;
@@ -104,6 +105,7 @@ async fn start_logs(conn: DbConn, queue: &State<Sender<()>>, mut shutdown: Shutd
                 if let Err(e) = CompStat::insert(log, &conn).await {
                     error_!("Database insertion error: {}", e);
                 }
+
             },
             msg = rx.recv() => match msg {      // queue recieves a message (set by async fn stop_logs)
                 Ok(_) => break,
@@ -111,24 +113,25 @@ async fn start_logs(conn: DbConn, queue: &State<Sender<()>>, mut shutdown: Shutd
             },
             _ = &mut shutdown => break,         // receive notification to shutdown
         }
+        
     }
 }
 
-use rocket::form::Form;
 
 // This shows the num_limit logs
 #[post("/logs/show", data = "<form>")]
-async fn show_logs(form: Option<Form<i64>>, flash: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
-
+async fn show_logs(form: Option<Form<i64>>) -> Flash<Redirect> {
     // If the num_limit isn't defined then set it to -1, this will force program to show all logs in the db
     let num_limit = match form {
         Some(value) => value.into_inner(),
         None => -1,
     };
-    
-    let flash = flash.map(FlashMessage::into_inner);
-    Template::render("index", Context::raw(&conn, flash, num_limit).await)
+
+    // Use flash message to tell index to display num_limit logs
+    Flash::success(Redirect::to("/"), format!("{}",num_limit))
 }
+
+
 
 // Delete all logs in db
 #[delete("/logs/delete")]
@@ -147,7 +150,17 @@ async fn delete_logs(conn: DbConn) -> Flash<Redirect> {
 #[get("/")]
 async fn index(flash: Option<FlashMessage<'_>>, conn: DbConn) -> Template {
     let flash = flash.map(FlashMessage::into_inner);
-    Template::render("index", Context::raw(&conn, flash, 5).await)
+    // If flash message is a number, display that many logs. Else, display 5.
+    let x = match &flash {
+        Some((_,number)) => {
+            match number.parse() { // check if can be parsed to an i64
+                Ok(val) => val,
+                Err(_) => 5,
+            }
+        },
+        _ => 5, 
+    };
+    Template::render("index", Context::raw(&conn, flash, x).await)
 }
 
 async fn run_migrations(rocket: Rocket<Build>) -> Rocket<Build> {
