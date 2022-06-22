@@ -6,7 +6,6 @@
   <meta name="description" content="A todo application written in Rocket.">
   <meta name="author" content="Sergio Benitez">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="1">
   <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="/css/normalize.css">
   <link rel="stylesheet" href="/css/skeleton.css">
@@ -62,7 +61,7 @@
         </div>
         <div class="three columns">
           <input type="number" 
-            name="numlogs" id="numlogs" value="10" min="1" />
+            name="numlogs" id="numlogs" value="5" min="1" />
         </div>
       </form>
     </div>

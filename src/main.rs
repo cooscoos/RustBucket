@@ -105,6 +105,7 @@ async fn start_logs(conn: DbConn, queue: &State<Sender<()>>, mut shutdown: Shutd
                 if let Err(e) = CompStat::insert(log, &conn).await {
                     error_!("Database insertion error: {}", e);
                 }
+                Flash::success(Redirect::to("/"), "All logs deleted.");
 
             },
             msg = rx.recv() => match msg {      // queue recieves a message (set by async fn stop_logs)
