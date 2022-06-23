@@ -7,7 +7,7 @@ docker
 
 
 
-## RustBucket
+# RustBucket
 
 This program will:
 
@@ -18,14 +18,14 @@ This program will:
 You can set it up so that you can access the webpage on any device in the same network.
 
 
-### Docker install (Recommended)
+## Docker install (Recommended)
 
 A docker install allows you to containerise this process.
 
 On the host system (the one you want to monitor)
 
 
-### Manual install
+## Manual install
 
 On the host system (the one you want to monitor)
 
@@ -45,7 +45,7 @@ If you wish to change the port that the web interface is published on.
 * Go to the address shown in the terminal to see the webpage, either on the host system itself, or on another computer in the same network.
 
 
-### Acknowledgements
+## Acknowledgements
 
 Thanks to people who wrote code that parts of this code are based on:
 
