@@ -43,3 +43,11 @@ If you wish to change the port that the web interface is published on.
 * Get rustup and then compile this repo with cargo run or cargo build.
 
 * Go to the address shown in the terminal to see the webpage, either on the host system itself, or on another computer in the same network.
+
+
+### Acknowledgements
+
+Thanks to people who wrote code that parts of this code are based on:
+
+* Rocket example todo: https://github.com/SergioBenitez/Rocket/tree/v0.5-rc/examples/todo
+* Systemstat: https://github.com/unrelentingtech/systemstat
