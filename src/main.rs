@@ -20,6 +20,7 @@ use rocket::{Build, Rocket, Shutdown, State};
 use rocket_dyn_templates::Template;
 use rocket::form::Form;
 
+
 // Internal modules
 mod linux_logs;
 mod stats;

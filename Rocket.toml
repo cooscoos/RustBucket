@@ -1,5 +1,9 @@
 [default]
 template_dir = "static"
+# Optional: Uncomment the following lines and edit them to match the address:port
+# for the web interface.
+# address = "0.0.0.0"
+# port = "8000"
 
 [default.databases.sqlite_database]
 url = "db/db.sqlite"
