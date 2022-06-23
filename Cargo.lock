@@ -103,8 +103,6 @@ dependencies = [
  "chrono",
  "diesel",
  "diesel_migrations",
- "parking_lot 0.12.1",
- "rand",
  "regex",
  "rocket",
  "rocket_dyn_templates",

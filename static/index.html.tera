@@ -6,7 +6,6 @@
   <meta name="description" content="A todo application written in Rocket.">
   <meta name="author" content="Sergio Benitez">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
   <link rel="stylesheet" href="/css/normalize.css">
   <link rel="stylesheet" href="/css/skeleton.css">
@@ -19,42 +18,91 @@
 
     <div class="row">
       <h4>RustBucket</h4>
-      <form action="/todo" method="post">
-        <div class="two columns">
-          <input type="submit" value="Start logging">
-        </div>
-      </form>
-    </div>
-
-
-
-    <div class="ten columns">
-      {% if flash %}
-          <small class="field-{{flash.0}}-msg">
-            {{ flash.1 }}
-          </small>
-        {% endif %}
-    </div>
-
-    <div class="row">
-      <form action="/todo" method="post">
-        <div class="two columns">
-          <input type="submit" name="_method" value="delete all" />
-        </div>
-      </form>
-    </div>
-    <div class="row">
       <div class="twelve columns">
-        <ul>
-        {% for task in tasks %}
-            <li>
-                {{ task.localdate }}, {{task.cpu_temp}}, {{task.memuse}} / {{task.mem}}
-              </form>
-            </li>
-        {% endfor %}
-        </ul>
+        {% if flash %}
+            <small class="field-{{flash.0}}-msg">
+              {{ flash.1 }}
+            </small>
+          {% endif %}
       </div>
     </div>
+  
+    <div class="row">
+      <div class="two columns">
+        <form action="/logs/start" method="post">
+          <input class="button-primary" type="submit" value="Start logs">
+        </form>
+      </div>
+      <div class="four columns">
+        <form action="/logs/stop" method="post">
+          <input class="button-primary" type="submit" name="_method" value="stop logs" />
+        </form>
+      </div>  
+
+      <div class="four columns">
+        <form action="/logs/delete" method="post">
+          <input type="submit" name="_method" value="delete all" />
+        </form>
+      </div>
+
+      <div class="two columns">
+        <form action="/shutdown" method="post">
+          <input type="submit" name="_method" value="shutdown" />
+        </form>
+        </div>
+    </div>
+
+    <div class="row">
+    <h6>Log display options, show:</h6>
+
+      <form action="/logs/show" method="post">
+        <div class="two columns">
+          <input type="submit" value="Most recent">
+        </div>
+        <div class="three columns">
+          <input type="number" 
+            name="numlogs" id="numlogs" value="5" min="1" />
+        </div>
+      </form>
+    </div>
+
+    <div class="row">
+    <div class="three columns">
+        <form action="/logs/show" method="post" >
+          <input type="submit" name="_method" value="all available logs" />
+        </form> 
+    </div>
+
+
+
+    </div>
+
+
+
+
+
+    <table class="u-full-width">
+      <thead>
+        <tr>
+          <th> <p>Date</p> <p>yyyy-mm-dd</p></th>
+          <th> <p>Time</p> <p>hh:mm:ss</p></th>
+          <th> <p>CPU Temp</p><p>&#176;C</p></th>
+          <th> <p>Memory</p><p>used / available GB</p></th>
+        </tr>
+      </thead>
+
+      <tbody> 
+        {% for task in logged_stats %}
+                  <tr>
+                    <td> {{ task.localdate }} </td>
+                      <td> {{ task.localtime }} </td>
+                    <td> {{task.cpu_temp}} </td>
+                    <td> {{task.memuse}} / {{task.mem}} </td>
+                  </tr>
+              {% endfor %}
+      </tbody>
+    </table> 
+
   </div>
 </body>
 </html>

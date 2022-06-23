@@ -1,8 +1,8 @@
+use chrono::{self, Datelike, Timelike};
+use regex::Regex;
 use std::error;
 use std::fs::File;
 use std::io::{self, Read};
-use chrono::{self, Datelike, Timelike};
-use regex::Regex;
 
 use super::memory::Memory; // super is the parent
 
@@ -23,13 +23,19 @@ pub fn read_memory() -> Result<Memory, Box<dyn error::Error>> {
     let re =
         Regex::new(r#"(?m)^(?:Buffers|Cached|Mem(?:Total|Free|Available)):.*?(?P<number>\d+)"#)?;
 
-    let mut moo = Vec::new();
+    let mut memory_vals = Vec::new();
     for item in re.captures_iter(&buffer) {
         let m = &item["number"].trim().parse::<u32>()?;
-        moo.push(*m);
+        memory_vals.push(*m);
     }
 
-    Ok(Memory::default(moo[0], moo[1], moo[2], moo[3], moo[4]))
+    Ok(Memory::default(
+        memory_vals[0],
+        memory_vals[1],
+        memory_vals[2],
+        memory_vals[3],
+        memory_vals[4],
+    ))
 }
 
 fn read_file(file: &str) -> Result<String, io::Error> {
@@ -40,7 +46,6 @@ fn read_file(file: &str) -> Result<String, io::Error> {
 
     Ok(buffer)
 }
-
 
 pub fn get_time_string() -> String {
     let dt = chrono::offset::Local::now();
