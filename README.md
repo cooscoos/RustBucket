@@ -1,7 +1,8 @@
 
 To do:
 
-option to download the database
+option to download the whole database
+cli tool to run you through the setup, asking for sampling rate?
 battery and network usage
 docker
 
@@ -9,23 +10,23 @@ docker
 
 # RustBucket
 
-This program will:
+This Rust program will:
 
-1. grab readings of cpu temperature, memory usage, etc from a host system running Linux (tested on Debian derivatives Rasperry Pi OS and Pop!_OS);
+1. grab one reading every second of cpu temperature, memory usage, etc from a host system running Linux (tested on Debian derivatives Rasperry Pi OS and Pop!_OS);
 2. store those readings in an sqlite database on the host system, and;
 3. launch a webpage for you to read the logs, delete or download the database, or shut down the host process remotely.
 
 You can set it up so that you can access the webpage on any device in the same network.
 
 
-## Docker install (Recommended)
+## Docker install (recommended)
 
 A docker install allows you to containerise this process.
 
 On the host system (the one you want to monitor)
 
 
-## Manual install
+## Manual install 
 
 On the host system (the one you want to monitor)
 
@@ -47,7 +48,7 @@ If you wish to change the port that the web interface is published on.
 
 ## Acknowledgements
 
-Thanks to people who wrote code that parts of this code are based on:
+Thanks to people who wrote other code that helped me write this code:
 
-* Rocket example todo: https://github.com/SergioBenitez/Rocket/tree/v0.5-rc/examples/todo
-* Systemstat: https://github.com/unrelentingtech/systemstat
+* Rocket example "todo": https://github.com/SergioBenitez/Rocket/tree/v0.5-rc/examples/todo
+* systemstat: https://github.com/unrelentingtech/systemstat
