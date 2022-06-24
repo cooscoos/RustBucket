@@ -74,6 +74,16 @@ impl Context {
     }
 }
 
+//use rocket::fs::NamedFile;
+//use std::path::{PathBuf,Path};
+
+// Download db.sqlite, bit buggy, leave it for now
+//#[get("/<file>")]
+//async fn download(file: PathBuf) -> Option<NamedFile> {
+//    let path = Path::new("db/").join(file);
+//    NamedFile::open(&path).await.ok()
+//}
+
 // Broadcast an empty message, this will break out of the logging loop in async fn start_logs
 #[post("/logs/stop")]
 async fn stop_logs(queue: &State<Sender<()>>) -> Flash<Redirect> {
@@ -195,7 +205,8 @@ fn rocket() -> Rocket<Build> {
                 stop_logs,
                 start_logs,
                 show_logs,
-                delete_logs
+                delete_logs,
+                //download
             ],
         )
 }

@@ -1,18 +1,14 @@
 
 To do:
-
-option to download the whole database
-cli tool to run you through the setup, asking for sampling rate?
-battery and network usage
 docker
 
 
 
 # RustBucket
 
-This Rust program will:
+This proof of concept Rust program will:
 
-1. grab one reading every second of cpu temperature, memory usage, etc from a host system running Linux (tested on Debian derivatives Rasperry Pi OS and Pop!_OS);
+1. grab one reading every second of cpu temperature and memory usage from a host system running Linux (tested on Debian derivatives Rasperry Pi OS and Pop!_OS);
 2. store those readings in an sqlite database on the host system, and;
 3. launch a webpage for you to read the logs, delete or download the database, or shut down the host process remotely.
 
