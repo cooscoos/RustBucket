@@ -8,6 +8,8 @@ This Rust program will:
 
 You can set it up so that you can access the webpage on any device in the same network.
 
+![snapshot of the app](/snapshot.png "snapshot of the app")
+
 ## To use 
 
 On the host system (the one you want to monitor)
