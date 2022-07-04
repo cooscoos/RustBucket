@@ -17,7 +17,7 @@ On the host system (the one you want to monitor)
 
 2. Download this here RustBucket github repo.
 
-3. Optional: By default this program will launch a web page at http://localhost:8000. If you want to access the web page from another device on the same network then uncomment and edit the following lines in Rocket.toml to match the address and port you'd like to access the page from:
+3. Optional: By default this program will launch a web page at http://localhost:8000. If you want to access the web page from another device on the same network then uncomment and edit the following two lines in Rocket.toml to match the address and port you'd like to access the page from:
 `address = "0.0.0.0"`
 `port = "8000"`
 
