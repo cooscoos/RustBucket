@@ -73,19 +73,6 @@
         </form> 
     </div>
     </div>
-
-
-    <div class="row">
-    <div class="three columns">
-        <form action="/db.sqlite" method="get" >
-          <input class="button-primary" type="submit" name="_method" value="Download logs" />
-        </form> 
-    </div>
-    </div>
-
-
-
-
     <table class="u-full-width">
       <thead>
         <tr>
