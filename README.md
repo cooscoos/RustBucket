@@ -12,15 +12,15 @@ You can set it up so that you can access the webpage on any device in the same n
 
 On the host system (the one you want to monitor)
 
-* Install sqlite3:
-sudo apt install libsqlite3-dev
+1. Install sqlite3:
+`sudo apt install libsqlite3-dev'
 
-* Download the current github repo.
+2. Download the current github repo.
 
-* Optional: By default this process will launch a web page at http://localhost:8000. If you want to access the web page from another device on the same network then uncomment and edit the following lines in Rocket.toml
+3. Optional: By default this process will launch a web page at http://localhost:8000. If you want to access the web page from another device on the same network then uncomment and edit the following lines in Rocket.toml
 address = "0.0.0.0"
 port = "8000"
 
-* Get rustup and then compile this repo with cargo run or cargo build.
+4. Get Rust and then compile this repo with cargo run or cargo build.
 
-* Go to http://localhost:8000/ or the address:port you entered in step 3.
+5. Go to http://localhost:8000/ or the address:port you entered in step 3.
