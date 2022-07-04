@@ -4,7 +4,7 @@ This Rust program will:
 
 1. grab one log per second of cpu temperature and memory usage from a host system running Linux (tested on Debian derivatives Rasperry Pi OS and Pop!_OS);
 2. store logs in an sqlite database on the host system, and;
-3. launch a webpage for you to read or delete logs, or shut down the program remotely.
+3. launch a webpage for you to start, stop, see or delete logs, or shut down the program remotely.
 
 You can set it up so that you can access the webpage on any device in the same network.
 
