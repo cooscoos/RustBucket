@@ -23,4 +23,4 @@ On the host system (the one you want to monitor)
 
 4. Get Rust and then compile this repo with `cargo run` or `cargo build`.
 
-5. Go to http://localhost:8000/ or the address:port you entered in step 3.
+5. Go to http://localhost:8000/ or the http://address:port from step 3.
